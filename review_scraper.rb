@@ -4,6 +4,8 @@ app_name = ARGV[0]
 out_file = File.open(ARGV[1],'w+')
 num_elem = 0
 
+out_file.write('reviewer name, number of stars, review')
+
 driver = Selenium::WebDriver.for :firefox
 driver.navigate.to 'https://play.google.com/store/apps'
 
@@ -28,25 +30,38 @@ if ARGV[2].nil?
 else
 	num_revs = ARGV[2].to_i
 end
-
+i,j=0,0
 puts "Harvesting reviews..."
 while num_elem < num_revs
 	begin
 		wait.until { driver.find_element(:class_name, "expand-next") }
-		elements = driver.find_elements(:class_name, "expand-next")
-		elements[1].click
+		next_button = driver.find_elements(:class_name, "expand-next")
+		next_button[1].click
 	rescue
 		wait.until { driver.find_element(:class_name, "expand-next") }
-		elements = driver.find_elements(:class_name, "expand-next")
-		elements[1].click
+		next_button = driver.find_elements(:class_name, "expand-next")
+		next_button[1].click
 	end
 
-	wait.until { driver.find_element(:class_name, "review-body") }
-	elements = driver.find_elements(:class_name, "review-body")
+	sleep(2)
 
-	elements.each do |element|
-		unless element.text.nil? or element.text.empty?
-			out_file.write("#{element.text}\n")
+	wait.until { driver.find_elements(:xpath, "//div[@class='single-review']/div[@class='review-body']").count > 1 }
+	reviews = driver.find_elements(:xpath, "//div[@class='single-review']/div[@class='review-body']")
+	review_names = driver.find_elements(:xpath, "//span[@class='author-name']/a ")
+	review_stars = driver.find_elements(:xpath, "//div[@class='review-info-star-rating']/div/div[@class='current-rating']")
+
+	reviews.each do |review|
+		unless review.text.nil? or review.text.empty?
+			num_stars = review_stars[i].size['width'] / 13
+			reviewer = review_names[j].text
+			while reviewer.nil? or reviewer.empty?
+				j+=1
+				reviewer = review_names[j].text unless review_names[j].nil?
+			end
+			text = review.text.gsub(',', ';')
+			out_file.write("#{reviewer},#{num_stars},#{text}\n")
+			j+=1
+			i+=1
 			num_elem += 1
 		end
 	end

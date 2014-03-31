@@ -1,2 +1,4 @@
 Gemfile.lock
 *.txt
+*.csv
+*.DS_Store
