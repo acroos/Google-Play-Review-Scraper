@@ -20,10 +20,14 @@ wait.until { driver.find_element(:partial_link_text, app_name) }
 element = driver.find_element(:partial_link_text, app_name)
 element.click
 
-puts "Getting number of reviews"
-wait.until { driver.find_element(:class_name, "reviews-num") }
-elements = driver.find_elements(:class_name, "reviews-num")
-num_revs = elements[0].text.gsub(',','').to_i
+if ARGV[2].nil?
+	puts "Getting number of reviews"
+	wait.until { driver.find_element(:class_name, "reviews-num") }
+	elements = driver.find_elements(:class_name, "reviews-num")
+	num_revs = elements[0].text.gsub(',','').to_i
+else
+	num_revs = ARGV[2].to_i
+end
 
 puts "Harvesting reviews..."
 while num_elem < num_revs
@@ -50,7 +54,7 @@ while num_elem < num_revs
 end
 
 puts "Done.  #{num_elem} reviews written to #{ARGV[1]}"
-
+out_file.close
 driver.quit
 
 #
