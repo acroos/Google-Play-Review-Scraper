@@ -22,25 +22,38 @@ wait.until { driver.find_element(:partial_link_text, app_name) }
 element = driver.find_element(:partial_link_text, app_name)
 element.click
 
-if ARGV[2].nil?
-	puts "Getting number of reviews"
-	wait.until { driver.find_element(:class_name, "reviews-num") }
-	elements = driver.find_elements(:class_name, "reviews-num")
-	num_revs = elements[0].text.gsub(',','').to_i
+if ARGV[2].nil? or ARGV[2] > 400
+	num_revs = 400
 else
 	num_revs = ARGV[2].to_i
 end
+
+initial = 1
 i,j=0,0
-puts "Harvesting reviews..."
 while num_elem < num_revs
 	begin
 		wait.until { driver.find_element(:class_name, "expand-next") }
 		next_button = driver.find_elements(:class_name, "expand-next")
+		driver.action.move_to(next_button[1]).perform
 		next_button[1].click
 	rescue
 		wait.until { driver.find_element(:class_name, "expand-next") }
 		next_button = driver.find_elements(:class_name, "expand-next")
+		driver.action.move_to(next_button[1]).perform
 		next_button[1].click
+	end
+
+	if initial == 1
+		puts "Getting most recent reviews"
+		sleep(3)
+		filter_button = driver.find_elements(:class_name, "dropdown-menu")
+		filter_button[0].click
+
+		wait.until { driver.find_elements(:xpath, "//div[@class='dropdown-menu-children']/div[@class='dropdown-child']")}
+		newest_button = driver.find_elements(:xpath, "//div[@class='dropdown-menu-children']/div[@class='dropdown-child']")[0]
+		newest_button.click
+		initial = 0
+		puts "Harvesting reviews..."
 	end
 
 	sleep(2)
